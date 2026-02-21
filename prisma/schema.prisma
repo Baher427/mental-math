@@ -34,8 +34,8 @@ model Location {
 // المستويات (10 مستويات ثابتة)
 model Level {
   id          String   @id @default(cuid())
-  number      Int      @unique // 1-10
-  name        String   // "المستوى الأول", "المستوى الثاني"...
+  number      Int      @unique
+  name        String
   monthsCount Int      @default(3)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -45,16 +45,18 @@ model Level {
 
 // المجموعات
 model Group {
-  id         String   @id @default(cuid())
-  name       String
-  locationId String
-  levelId    String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  location   Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  level      Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
-  students   Student[]
-  sessions   Session[]
+  id            String   @id @default(cuid())
+  name          String
+  locationId    String
+  levelId       String
+  sessionTime   String?  // وقت الحصة الافتراضي
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  location      Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  level         Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
+  students      Student[]
+  sessions      Session[]
+  attendances   Attendance[]
 }
 
 // الطلاب
@@ -73,16 +75,17 @@ model Student {
   level        Level    @relation(fields: [levelId], references: [id], onDelete: Cascade)
   group        Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
   evaluations  Evaluation[]
+  attendances  Attendance[]
 }
 
-// الحصص
+// الحصص (للتقييم)
 model Session {
   id            String   @id @default(cuid())
   groupId       String
-  levelMonth    Int      // الشهر (1-3)
-  sessionNumber Int      // رقم الحصة في الشهر (1-4)
+  levelMonth    Int
+  sessionNumber Int
   date          DateTime @default(now())
-  notes         String?  @db.Text // ملاحظات عامة للمجموعة
+  notes         String?  @db.Text
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
   group         Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
@@ -97,17 +100,37 @@ model Evaluation {
   sessionId        String
   studentId        String
   isPresent        Boolean  @default(true)
-  behavior         Int?     // السلوك (0-100)
-  focus            Int?     // التركيز (0-100)
-  speed            Int?     // السرعة (0-100)
-  imaginationWrite Int?     // التخيل الكتابي (0-100)
-  imaginationVerbal Int?    // التخيل اللفظي (0-100)
-  abacus           Int?     // المعداد (0-100)
-  notes            String?  @db.Text // ملاحظات
+  behavior         Int?
+  focus            Int?
+  speed            Int?
+  imaginationWrite Int?
+  imaginationVerbal Int?
+  abacus           Int?
+  notes            String?
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
   session          Session  @relation(fields: [sessionId], references: [id], onDelete: Cascade)
   student          Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
 
   @@unique([sessionId, studentId])
+}
+
+// الحضور والغياب (صفحة منفصلة)
+model Attendance {
+  id           String   @id @default(cuid())
+  groupId      String
+  studentId    String
+  date         DateTime @default(now())
+  startTime    DateTime?
+  endTime      DateTime?
+  sessionTime  String?  // وقت الحصة
+  isPresent    Boolean  @default(true)
+  notes        String?  @db.Text
+  weekNumber   Int?     // رقم الأسبوع
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  group        Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, studentId, date])
 }

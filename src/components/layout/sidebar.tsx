@@ -17,12 +17,12 @@ import {
   ClipboardList,
   BarChart3,
   Archive,
-  Settings,
   LogOut,
   Menu,
   ChevronLeft,
   ChevronRight,
   Bot,
+  CalendarCheck,
 } from 'lucide-react';
 
 const sidebarItems = [
@@ -30,6 +30,7 @@ const sidebarItems = [
   { href: '/locations', icon: MapPin, label: 'الأماكن' },
   { href: '/groups', icon: Users, label: 'المجموعات' },
   { href: '/students', icon: GraduationCap, label: 'الطلاب' },
+  { href: '/attendance', icon: CalendarCheck, label: 'الحضور والغياب' },
   { href: '/sessions', icon: ClipboardList, label: 'التقييم الأسبوعي' },
   { href: '/analytics', icon: BarChart3, label: 'التحليلات' },
   { href: '/ai', icon: Bot, label: 'التحليل الذكي' },
