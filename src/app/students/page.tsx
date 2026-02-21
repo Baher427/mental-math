@@ -61,7 +61,7 @@ interface Student {
 
 export default function StudentsPage() {
   const router = useRouter();
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, _hasHydrated } = useAuthStore();
   const [students, setStudents] = useState<Student[]>([]);
   const [locations, setLocations] = useState<Location[]>([]);
   const [levels, setLevels] = useState<Level[]>([]);
@@ -70,7 +70,7 @@ export default function StudentsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedLocationId, setSelectedLocationId] = useState<string>('');
+  const [selectedLocationId, setSelectedLocationId] = useState<string>('all');
   const [activeTab, setActiveTab] = useState('active');
   const [newStudent, setNewStudent] = useState({
     name: '',
@@ -81,16 +81,16 @@ export default function StudentsPage() {
   });
 
   useEffect(() => {
-    if (!isAuthenticated) {
+    if (_hasHydrated && !isAuthenticated) {
       router.push('/login');
     }
-  }, [isAuthenticated, router]);
+  }, [_hasHydrated, isAuthenticated, router]);
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (_hasHydrated && isAuthenticated) {
       fetchData();
     }
-  }, [isAuthenticated]);
+  }, [_hasHydrated, isAuthenticated]);
 
   useEffect(() => {
     if (newStudent.groupId) {
@@ -121,7 +121,7 @@ export default function StudentsPage() {
     }
   };
 
-  const filteredGroups = selectedLocationId
+  const filteredGroups = selectedLocationId && selectedLocationId !== 'all'
     ? groups.filter(g => g.location.id === selectedLocationId)
     : groups;
 
@@ -192,7 +192,19 @@ export default function StudentsPage() {
   const filteredStudents = students
     .filter(s => activeTab === 'active' ? !s.isArchived : s.isArchived)
     .filter(s => !searchTerm || s.name.includes(searchTerm))
-    .filter(s => !selectedLocationId || s.group.location.id === selectedLocationId);
+    .filter(s => selectedLocationId === 'all' || s.group.location.id === selectedLocationId);
+
+  // Show loading while hydrating
+  if (!_hasHydrated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-slate-500">جاري التحميل...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (!isAuthenticated) return null;
 
@@ -245,8 +257,8 @@ export default function StudentsPage() {
                     <div className="space-y-2">
                       <Label>المكان</Label>
                       <Select
-                        value={selectedLocationId}
-                        onValueChange={setSelectedLocationId}
+                        value={selectedLocationId === 'all' ? '' : selectedLocationId}
+                        onValueChange={(v) => setSelectedLocationId(v || 'all')}
                       >
                         <SelectTrigger>
                           <SelectValue placeholder="اختر المكان" />
@@ -322,7 +334,7 @@ export default function StudentsPage() {
                   <SelectValue placeholder="كل الأماكن" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">كل الأماكن</SelectItem>
+                  <SelectItem value="all">كل الأماكن</SelectItem>
                   {locations.map((loc) => (
                     <SelectItem key={loc.id} value={loc.id}>
                       {loc.name}

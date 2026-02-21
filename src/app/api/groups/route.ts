@@ -17,6 +17,14 @@ export async function GET(request: NextRequest) {
       include: {
         location: true,
         level: true,
+        students: {
+          where: { isArchived: false },
+          select: {
+            id: true,
+            name: true,
+            phone: true,
+          },
+        },
         _count: {
           select: { students: true },
         },
