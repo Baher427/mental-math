@@ -1,8 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
-// Initialize levels if they don't exist
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     const existingLevels = await db.level.count();
     
@@ -41,7 +40,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('Error initializing levels:', error);
     return NextResponse.json(
-      { error: 'حدث خطأ أثناء تهيئة المستويات' },
+      { error: 'حدث خطأ أثناء تهيئة المستويات: ' + (error instanceof Error ? error.message : 'خطأ') },
       { status: 500 }
     );
   }
